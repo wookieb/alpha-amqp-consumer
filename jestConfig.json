@@ -1,0 +1,12 @@
+{
+  "moduleFileExtensions": [
+    "ts",
+    "js"
+  ],
+  "transform": {
+    ".(ts|tsx)": "ts-jest/preprocessor"
+  },
+  "testRegex": "<rootDir>/src/__tests__/.*Test\\.ts$",
+  "testEnvironment": "node",
+  "setupTestFrameworkScriptFile": "<rootDir>/src/__tests__/bootstrap.ts"
+}
