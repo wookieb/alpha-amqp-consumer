@@ -1,0 +1,7 @@
+machine:
+  environment:
+    JEST_JUNIT_OUTPUT: $CIRCLE_TEST_REPORTS/alpha-amqp-consumer.xml
+
+test:
+  override:
+    - npm run test:ci

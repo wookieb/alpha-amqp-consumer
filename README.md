@@ -1,5 +1,7 @@
 # Alpha AMQP Consumer
 
+[![CircleCI](https://circleci.com/gh/wookieb/alpha-amqp-consumer.svg?style=svg)](https://circleci.com/gh/wookieb/alpha-amqp-consumer)
+
 Library for reliable message consumption via AMQP protocol.
 
 Features:
