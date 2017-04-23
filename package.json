@@ -1,6 +1,6 @@
 {
   "name": "alpha-amqp-consumer",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Reliable message consumption via AMQP protocol",
   "main": "compiled/index.js",
   "types": "compiled/index.d.ts",
@@ -34,13 +34,13 @@
   "dependencies": {
     "amqplib": "0.4.*",
     "backoff": "2.*",
-    "debug": "2.*"
+    "debug": "2.*",
+    "@types/amqplib": "^0.5.1",
+    "@types/debug": "0.0.29"
   },
   "devDependencies": {
-    "@types/amqplib": "^0.5.1",
     "@types/chai": "^3.5.0",
     "@types/chai-as-promised": "0.0.30",
-    "@types/debug": "0.0.29",
     "@types/faker": "^4.1.0",
     "@types/jest": "^19.2.2",
     "@types/node": "^7.0.12",
