@@ -198,7 +198,7 @@ class Consumer extends events_1.EventEmitter {
         this.ongoingConsumptions--;
         if (this.ongoingConsumptions === 0) {
             this.emit('all-consumed');
-        } 
+        }
     }
 }
 Consumer.defaultConsumerOptions = {

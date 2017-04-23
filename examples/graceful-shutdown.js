@@ -28,5 +28,6 @@ connect('amqp://localhost?heartbeat=60')
             };
 
             manager.consumers.forEach(c => c.on('all-consumed', onAllConsumed));
+            onAllConsumed();
         })
     });
