@@ -15,7 +15,7 @@ describe('ConnectionManager', () => {
     let channelModel: any;
     let channel: any;
 
-    const URL = 'amqp://host/url';
+    const URL = 'amqp://host/url?heartbeat=10';
     beforeEach(() => {
         sinon.stub(amqp, 'connect');
         manager = new ConnectionManager(URL);
@@ -51,6 +51,24 @@ describe('ConnectionManager', () => {
         sinon.assert.calledWithMatch(onConsumer, sinon.match.same(consumer));
     });
 
+    describe('Warns about missing "heartbeat" in connection URL', () => {
+
+        beforeEach(() => {
+            sinon.stub(console, 'warn');
+        });
+
+        afterEach(() => {
+            (<SinonStub>console.warn).restore();
+        });
+        it('test', () => {
+            new ConnectionManager('amqp://localhost');
+
+            sinon.assert.calledWith(
+                <SinonStub>console.warn,
+                `"heartbeat" options is missing in your connection URL. This might lead to unexpected connection loss.`
+            );
+        })
+    });
     describe('connecting', () => {
         it('success path', async () => {
             (<SinonStub>amqp.connect).resolves(channelModel);
@@ -130,7 +148,7 @@ describe('ConnectionManager', () => {
             sinon.stub(consumer, 'stop').resolves(null);
         });
 
-        await manager.stop();
+        await manager.stopAllConsumers();
 
         consumers.forEach((consumer) => {
             sinon.assert.calledOnce(<SinonStub>consumer.stop);

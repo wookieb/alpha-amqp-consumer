@@ -6,7 +6,6 @@
     "moduleResolution": "node",
     "noImplicitAny": true,
     "outDir": "compiled",
-    "rootDir": "src",
-    "sourceMap": true
+    "rootDir": "src"
   }
 }

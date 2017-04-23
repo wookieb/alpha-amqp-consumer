@@ -2,6 +2,7 @@ import Consumer, {ConsumerFunction, ConsumerPolicy} from './Consumer';
 import * as amqp from 'amqplib';
 import debugFn from './debug';
 import {EventEmitter} from 'events';
+import * as url from "url";
 const backoff = require('backoff');
 const debug = debugFn('connection-manager');
 
@@ -46,13 +47,24 @@ export default class ConnectionManager extends EventEmitter {
     constructor(private connectionURL: string, private options?: ConnectionManagerOptions) {
         super();
         this.options = this.options || {};
+
+        this.assertURLCorrectness();
+    }
+
+    private assertURLCorrectness() {
+        const parts = url.parse(this.connectionURL, true);
+        const heartbeat = parseInt(parts.query.heartbeat, 10);
+        if (isNaN(heartbeat) || heartbeat < 1) {
+            console.warn(`"heartbeat" options is missing in your connection URL. This might lead to unexpected connection loss.`);
+        }
     }
 
     /**
+     * Connects to AMQP broker
      *
      * @returns {Promise<void>}
      */
-    async connect(): Promise<void> {
+    public async connect(): Promise<void> {
         try {
             await this.connectWithBackoff();
             this.connection.on('close', (err: Error) => {
@@ -123,7 +135,7 @@ export default class ConnectionManager extends EventEmitter {
      *
      * @returns {Promise}
      */
-    async stop(): Promise<void> {
+    async stopAllConsumers(): Promise<void> {
         await Promise.all(this.consumers.map(
             (consumer) => {
                 debug(`Stopping consumption for queue ${consumer.queue}...`);
@@ -134,7 +146,7 @@ export default class ConnectionManager extends EventEmitter {
 
     /**
      * Closes connection.
-     * If you want to wait for all consumers to finish their task then call {@see stop} before disconnecting.
+     * If you want to wait for all consumers to finish their task then call {@see stopAllConsumers} before disconnecting.
      *
      * @returns {Promise<void>}
      */

@@ -45,7 +45,7 @@ export interface ConsumerPolicy {
 
 export type ACKType = (allUpTo?: boolean) => void;
 export type RejectType = (allUpTo?: boolean, requeue?: boolean) => void;
-export type ConsumerFunction = (m: Message, ack?: ACKType, reject?: RejectType) => void | Promise<void>;
+export type ConsumerFunction = (m: Message, ack?: ACKType, reject?: RejectType) => void | Promise<any>;
 
 export default class Consumer extends EventEmitter {
 
@@ -69,7 +69,7 @@ export default class Consumer extends EventEmitter {
     constructor(private consumerPolicy: ConsumerPolicy, private consumerFunction: ConsumerFunction) {
         super();
 
-        this.debug = debug('stream:__no-consumer-tag__');
+        this.debug = debug('consumer:__no-consumer-tag__');
 
         this.consumerPolicy.assertQueue = ((v) => {
             return v === undefined ? true : v;
@@ -90,14 +90,19 @@ export default class Consumer extends EventEmitter {
         }
     }
 
+    /**
+     * Returns currently consumed queue name
+     *
+     * @returns {string}
+     */
     get queue(): string {
         return this.currentQueueName;
     }
 
     /**
-     * Sets channel and starts consumption if stream is paused
+     * Sets channel and starts consumption
      *
-     * @param {amqp.Channel} channel
+     * @param channel
      * @returns {Promise}
      */
     async setChannel(channel: amqp.Channel): Promise<void> {
@@ -154,7 +159,7 @@ export default class Consumer extends EventEmitter {
 
         this.consumerTag = result.consumerTag;
         this.isConsuming = true;
-        this.debug = debug('stream:' + this.consumerTag);
+        this.debug = debug('consumer:' + this.consumerTag);
         this.debug(`Queue "${this.currentQueueName}" consumption has started`);
     }
 
@@ -180,13 +185,14 @@ export default class Consumer extends EventEmitter {
         try {
             await this.channel.cancel(this.consumerTag);
             this.isConsuming = false;
-            this.debug('Stream paused');
+            this.debug('Consumer paused');
         } catch (e) {
-            this.debug(`Stream failed to pause ${e.message}`);
+            this.debug(`Consumer failed to pause ${e.message}`);
         }
     }
 
     /**
+     * Indicates whether consumption is stopped
      *
      * @returns {boolean}
      */
@@ -195,6 +201,8 @@ export default class Consumer extends EventEmitter {
     }
 
     /**
+     * Resumes consumption
+     *
      * @returns {Promise<void>}
      */
     async resume() {
@@ -246,13 +254,13 @@ export default class Consumer extends EventEmitter {
                     .then(
                         () => ack(),
                         (error: any) => {
-                            this.emit('error', error);
+                            this.emit('consumer-error', error);
                             reject();
                         }
                     );
             }
         } catch (e) {
-            this.emit('error', e);
+            this.emit('consumer-error', e);
             reject();
         }
     }

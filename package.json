@@ -13,6 +13,12 @@
   "bugs": {
     "url": "https://github.com/wookieb/alpha-amqp-consumer/issues"
   },
+  "keywords": [
+    "amqp",
+    "consumer",
+    "consumption",
+    "typescript"
+  ],
   "scripts": {
     "test": "./node_modules/.bin/jest --config jestConfig.json",
     "prepublish": "npm run compile",

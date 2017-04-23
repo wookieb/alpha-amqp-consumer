@@ -76,8 +76,8 @@ describe('Consumer', () => {
     });
 
     it('setting channel starts ', async () => {
-        const stream = new Consumer({queue: QUEUE_NAME, assertQueue: false}, consumerFunction);
-        await stream.setChannel(channel);
+        const consumer = new Consumer({queue: QUEUE_NAME, assertQueue: false}, consumerFunction);
+        await consumer.setChannel(channel);
         sinon.assert.called(channel.consume);
     });
 
@@ -326,7 +326,7 @@ describe('Consumer', () => {
 
             consumer.on('consumed', onConsumed);
             consumer.on('rejected', onRejected);
-            consumer.on('error', onError);
+            consumer.on('consumer-error', onError);
 
             await consumer.setChannel(channel);
             messageCallback = channel.consume.getCall(0).args[1];

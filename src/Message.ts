@@ -1,16 +1,17 @@
 import * as amqp from 'amqplib';
 
 export interface MessageFields {
-    consumerTag: string,
-    deliveryTag: number,
-    redelivered: boolean,
-    exchange: string,
-    routingKey: string
+    readonly consumerTag: string,
+    readonly deliveryTag: number,
+    readonly redelivered: boolean,
+    readonly exchange: string,
+    readonly routingKey: string
 }
 
 export default class Message {
 
-    constructor(public message: amqp.Message, public queue: string) {
+
+    constructor(public readonly message: amqp.Message, public readonly queue: string) {
     }
 
     get content() {
