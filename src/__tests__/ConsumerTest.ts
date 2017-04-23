@@ -256,7 +256,7 @@ describe('Consumer', () => {
         const error = new Error('test');
 
         const message: amqp.Message = {
-            content: Buffer.from(faker.random.alphaNumeric(20), 'utf8'),
+            content: new Buffer(faker.random.alphaNumeric(20), 'utf8'),
             properties: {some: 'properties'},
             fields: {some: 'fields'}
         };
@@ -431,7 +431,7 @@ describe('Consumer', () => {
             const promise2 = new Promise(r => resolve2 = r);
             const message1 = message;
             const message2: amqp.Message = {
-                content: Buffer.from(faker.random.alphaNumeric(30), 'utf8'),
+                content: new Buffer(faker.random.alphaNumeric(30), 'utf8'),
                 properties: {some: 'properties 2'},
                 fields: {some: 'fields 2'}
             };

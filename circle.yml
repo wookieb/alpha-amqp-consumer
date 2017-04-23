@@ -1,4 +1,6 @@
 machine:
+  node:
+    version: 4.3.0
   environment:
     JEST_JUNIT_OUTPUT: $CIRCLE_TEST_REPORTS/alpha-amqp-consumer.xml
 
