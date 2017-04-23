@@ -271,11 +271,7 @@ export default class Consumer extends EventEmitter {
 
     private decreaseCounter() {
         this.ongoingConsumptions--;
-        if (this.ongoingConsumptions < 0) {
-            this.ongoingConsumptions = 0;
-        }
-
-        if (this.ongoingConsumptions) {
+        if (this.ongoingConsumptions === 0) {
             this.emit('all-consumed');
         }
     }

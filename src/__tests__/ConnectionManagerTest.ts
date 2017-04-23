@@ -114,7 +114,7 @@ describe('ConnectionManager', () => {
             sinon.assert.calledTwice(onChannel);
         });
 
-        it('does not reconnect when connecton is closed without error', async () => {
+        it('does not reconnect when connection is closed without error', async () => {
             await manager.connect();
 
             manager.connect = () => {

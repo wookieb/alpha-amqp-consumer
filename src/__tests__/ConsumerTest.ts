@@ -423,9 +423,12 @@ describe('Consumer', () => {
         });
 
         it('emits "all-consumed" if all consumptions are finished', async () => {
-            let resolve: Function;
+            let resolve1: Function;
+            let resolve2: Function;
+
             const onAllConsumedSpy = sinon.spy();
-            const promise = new Promise(r => resolve = r);
+            const promise1 = new Promise(r => resolve1 = r);
+            const promise2 = new Promise(r => resolve2 = r);
             const message1 = message;
             const message2: amqp.Message = {
                 content: Buffer.from(faker.random.alphaNumeric(30), 'utf8'),
@@ -434,16 +437,20 @@ describe('Consumer', () => {
             };
             consumer.on('all-consumed', onAllConsumedSpy);
 
-            consumerFunction.returns(promise);
+            consumerFunction.onCall(0).returns(promise1);
+            consumerFunction.onCall(1).returns(promise2);
 
             messageCallback(message1);
             messageCallback(message2);
 
             //noinspection JSUnusedAssignment
-            resolve('test');
+            resolve1('test');
+            await promise1;
+            sinon.assert.notCalled(onAllConsumedSpy);
 
-            await messageConsumed;
-
+            //noinspection JSUnusedAssignment
+            resolve2('test');
+            await promise2;
             sinon.assert.calledOnce(onAllConsumedSpy);
         });
     });

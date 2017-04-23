@@ -8,5 +8,6 @@
   },
   "testRegex": "<rootDir>/src/__tests__/.*Test\\.ts$",
   "testEnvironment": "node",
-  "setupTestFrameworkScriptFile": "<rootDir>/src/__tests__/bootstrap.ts"
+  "setupTestFrameworkScriptFile": "<rootDir>/src/__tests__/bootstrap.ts",
+  "testResultsProcessor": "<rootDir>/node_modules/ts-jest/coverageprocessor.js"
 }
