@@ -60,7 +60,7 @@ manager.consume(
 ```
 
 ## API
-See special [API declaration file](API.d.ts) and [examples directory](./examples).
+See special [API declaration file](API.md) and [examples directory](./examples).
 
 ### Brief API introduction
 First, you need to create an instance of ConnectionManager responsible for connection and channel initialization.
@@ -81,12 +81,9 @@ const connect = require('alpha-amqp-consumer').connect;
 
 connect('amqp://localhost?heartbeat=10')
     .then((connectionManager) => {
-    
-        // consuming a queue
-        // ConnectionManager.prototype.consume returns an intance of Consumer
-        
-        // All created consumers are also stored in connectionManager.consumers array
-        const queueConsumer = connectionManager.consume({
+        // Consuming a queue
+        // All created consumers are stored in connectionManager.consumers array
+        connectionManager.consume({
             queue: 'some-queue'
         }, (message) => {
             
@@ -97,10 +94,13 @@ connect('amqp://localhost?heartbeat=10')
             return new Promise((resolve) => {
                 setTimeout(resolve, 1000);
             });
-        });
+        })
+            .then((consumer) => {
+                consumer instanceof Consumer;
+            });
     
         // Creates new queue and binds to given exchange
-        const queueForExchangeConsumer = connectionManager.consume({
+        connectionManager.consume({
             exchange: 'amqp.topic',
             pattern: 'some-routing-key'
         }, (message, ack, reject) => {

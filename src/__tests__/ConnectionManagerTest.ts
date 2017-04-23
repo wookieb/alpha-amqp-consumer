@@ -40,11 +40,11 @@ describe('ConnectionManager', () => {
         (<SinonStub>amqp.connect).restore();
     });
 
-    it('creating new consumer emits an event', () => {
+    it('creating new consumer emits an event', async () => {
         const onConsumer = sinon.spy();
         manager.on('consumer', onConsumer);
 
-        const consumer = manager.consume({
+        const consumer = await manager.consume({
             queue: 'queue'
         }, sinon.spy());
 
@@ -85,9 +85,9 @@ describe('ConnectionManager', () => {
 
         it('all registered consumers gets notified about new channel', async () => {
             const consumer = [
-                manager.consume({queue: 'queue1'}, sinon.spy()),
-                manager.consume({queue: 'queue2'}, sinon.spy()),
-                manager.consume({queue: 'queue3'}, sinon.spy())
+                await manager.consume({queue: 'queue1'}, sinon.spy()),
+                await manager.consume({queue: 'queue2'}, sinon.spy()),
+                await manager.consume({queue: 'queue3'}, sinon.spy())
             ];
 
             consumer.forEach((consumer) => {
@@ -138,10 +138,19 @@ describe('ConnectionManager', () => {
     });
 
     it('stopping manager stops consumption for all registered consumers', async () => {
+        (<SinonStub>amqp.connect).resolves(channelModel);
+        (<SinonStub>channelModel.createChannel).resolves(channel);
+
+        (<SinonStub>channel.consume).resolves({
+            consumerTag: 'someTag'
+        });
+
+        await manager.connect();
+
         const consumers = [
-            manager.consume({queue: 'queue1'}, sinon.spy()),
-            manager.consume({queue: 'queue2'}, sinon.spy()),
-            manager.consume({queue: 'queue3'}, sinon.spy())
+            await manager.consume({queue: 'queue1', assertQueue: false}, sinon.spy()),
+            await manager.consume({queue: 'queue2', assertQueue: false}, sinon.spy()),
+            await manager.consume({queue: 'queue3', assertQueue: false}, sinon.spy())
         ];
 
         consumers.forEach((consumer) => {

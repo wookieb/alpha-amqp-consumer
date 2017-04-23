@@ -138,7 +138,9 @@ export default class ConnectionManager extends EventEmitter {
         await Promise.all(this.consumers.map(
             (consumer) => {
                 debug(`Stopping consumption for queue ${consumer.queue}...`);
-                return consumer.stop();
+                if (!consumer.isStopped) {
+                    return consumer.stop();
+                }
             }
         ));
     }
@@ -160,16 +162,15 @@ export default class ConnectionManager extends EventEmitter {
      *
      * @param consumerPolicy
      * @param consumerFunction
-     * @returns {Consumer}
      */
-    consume(consumerPolicy: ConsumerPolicy, consumerFunction: ConsumerFunction): Consumer {
-        return this.registerConsumer(new Consumer(consumerPolicy, consumerFunction));
+    async consume(consumerPolicy: ConsumerPolicy, consumerFunction: ConsumerFunction): Promise<Consumer> {
+        return await this.registerConsumer(new Consumer(consumerPolicy, consumerFunction));
     }
 
-    private registerConsumer(consumer: Consumer) {
+    private async registerConsumer(consumer: Consumer) {
         if (this.channel) {
             //noinspection JSIgnoredPromiseFromCall
-            consumer.setChannel(this.channel);
+            await consumer.setChannel(this.channel);
         }
         this.consumers.push(consumer);
         this.emit('consumer', consumer);

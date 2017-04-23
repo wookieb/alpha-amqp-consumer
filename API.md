@@ -1,3 +1,4 @@
+```typescript
 /**
  * API Definition with stripped private variables and methods.
  * It is NOT real declaration file. For real one look at compiled/index.d.ts
@@ -176,9 +177,9 @@ export class ConnectionManager extends EventEmitter {
      *
      * @param consumerPolicy
      * @param consumerFunction
-     * @returns {Consumer}
+     * @returns {Promise<Consumer>}
      */
-    consume(consumerPolicy: ConsumerPolicy, consumerFunction: ConsumerFunction): Consumer;
+    consume(consumerPolicy: ConsumerPolicy, consumerFunction: ConsumerFunction): Promise<Consumer>;
 }
 
 /**
@@ -189,3 +190,4 @@ export class ConnectionManager extends EventEmitter {
  * @returns {Promise<ConnectionManager>}
  */
 export function connect(url: string, options?: ConnectionManagerOptions): Promise<ConnectionManager>;
+```
