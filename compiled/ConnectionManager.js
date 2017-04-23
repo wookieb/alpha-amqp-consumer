@@ -102,7 +102,9 @@ class ConnectionManager extends events_1.EventEmitter {
         return __awaiter(this, void 0, void 0, function* () {
             yield Promise.all(this.consumers.map((consumer) => {
                 debug(`Stopping consumption for queue ${consumer.queue}...`);
-                return consumer.stop();
+                if (!consumer.isStopped) {
+                    return consumer.stop();
+                }
             }));
         });
     }
@@ -124,19 +126,22 @@ class ConnectionManager extends events_1.EventEmitter {
      *
      * @param consumerPolicy
      * @param consumerFunction
-     * @returns {Consumer}
      */
     consume(consumerPolicy, consumerFunction) {
-        return this.registerConsumer(new Consumer_1.default(consumerPolicy, consumerFunction));
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.registerConsumer(new Consumer_1.default(consumerPolicy, consumerFunction));
+        });
     }
     registerConsumer(consumer) {
-        if (this.channel) {
-            //noinspection JSIgnoredPromiseFromCall
-            consumer.setChannel(this.channel);
-        }
-        this.consumers.push(consumer);
-        this.emit('consumer', consumer);
-        return consumer;
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.channel) {
+                //noinspection JSIgnoredPromiseFromCall
+                yield consumer.setChannel(this.channel);
+            }
+            this.consumers.push(consumer);
+            this.emit('consumer', consumer);
+            return consumer;
+        });
     }
 }
 ConnectionManager.defaultConnectionOptions = {};

@@ -57,8 +57,7 @@ export default class ConnectionManager extends EventEmitter {
      *
      * @param consumerPolicy
      * @param consumerFunction
-     * @returns {Consumer}
      */
-    consume(consumerPolicy: ConsumerPolicy, consumerFunction: ConsumerFunction): Consumer;
+    consume(consumerPolicy: ConsumerPolicy, consumerFunction: ConsumerFunction): Promise<Consumer>;
     private registerConsumer(consumer);
 }
