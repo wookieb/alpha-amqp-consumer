@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import Consumer, { ConsumerFunction, ConsumerPolicy } from './Consumer';
+import * as amqp from 'amqplib';
 import { EventEmitter } from 'events';
 export interface ConnectionManagerOptions {
     /**
@@ -24,8 +25,8 @@ export default class ConnectionManager extends EventEmitter {
     private connectionURL;
     private options;
     consumers: Consumer[];
-    private connection;
-    private channel;
+    connection: amqp.Connection;
+    channel: amqp.Channel;
     static defaultConnectionOptions: any;
     static defaultReconnectOptions: ReconnectOptions;
     constructor(connectionURL: string, options?: ConnectionManagerOptions);

@@ -141,6 +141,8 @@ export interface ReconnectOptions {
 }
 export class ConnectionManager extends EventEmitter {
     consumers: Consumer[];
+    connection: amqp.Connection;
+    channel: amqp.Channel;
 
     static defaultConnectionOptions: any;
     static defaultReconnectOptions: ReconnectOptions;
