@@ -19,6 +19,9 @@
     "consumption",
     "typescript"
   ],
+  "engines": {
+      "node": ">=4.3.0"
+  },
   "scripts": {
     "test": "./node_modules/.bin/jest --config jestConfig.json",
     "test:coverage": "npm test -- --testResultsProcessor ts-jest/coverageprocessor --coverage --no-cache",
