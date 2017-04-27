@@ -62,8 +62,8 @@ export default class Consumer extends EventEmitter {
     };
 
     static defaultAssertQueueOptions: amqp.Options.AssertQueue = {
-        exclusive: true,
-        autoDelete: true
+        durable: true,
+        autoDelete: false
     };
 
     constructor(private consumerPolicy: ConsumerPolicy, private consumerFunction: ConsumerFunction) {
@@ -143,8 +143,9 @@ export default class Consumer extends EventEmitter {
             <amqp.Options.Consume>{consumerTag: this.consumerTag}
         );
 
+        let result;
         try {
-            var result = await this.channel.consume(this.currentQueueName, (msg) => {
+            result = await this.channel.consume(this.currentQueueName, (msg) => {
                 if (msg === null) {
                     // ignore - consumer cancelled
                     return;
@@ -226,25 +227,25 @@ export default class Consumer extends EventEmitter {
         this.incrementCounter();
 
         let isConsumed = false;
-        const ack = () => {
+        const ackFn = this.channel.ack.bind(this.channel, message.message);
+        const ack = function () {
             if (isConsumed) {
                 return;
             }
-            const args = Array.prototype.slice.call(arguments);
             this.emit('consumed', message);
-            this.channel.ack.apply(this.channel, [message.message].concat(args));
+            ackFn.apply(this, arguments);
             isConsumed = true;
-        };
+        }.bind(this);
 
-        const reject = () => {
+        const nackFn = this.channel.nack.bind(this.channel, message.message);
+        const reject = function () {
             if (isConsumed) {
                 return;
             }
-            const args = Array.prototype.slice.call(arguments);
             this.emit('rejected', message);
-            this.channel.nack.apply(this.channel, [message.message].concat(args));
+            nackFn.apply(this, arguments);
             isConsumed = true;
-        };
+        }.bind(this);
 
         try {
             const result = this.consumerFunction(message, ack, reject);

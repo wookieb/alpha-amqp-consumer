@@ -81,8 +81,9 @@ class Consumer extends events_1.EventEmitter {
     startQueueConsumption() {
         return __awaiter(this, void 0, void 0, function* () {
             const options = Object.assign({}, Consumer.defaultConsumerOptions, this.consumerPolicy.consumerOptions, { consumerTag: this.consumerTag });
+            let result;
             try {
-                var result = yield this.channel.consume(this.currentQueueName, (msg) => {
+                result = yield this.channel.consume(this.currentQueueName, (msg) => {
                     if (msg === null) {
                         // ignore - consumer cancelled
                         return;
@@ -158,22 +159,22 @@ class Consumer extends events_1.EventEmitter {
     consume(message) {
         this.incrementCounter();
         let isConsumed = false;
-        const ack = () => {
+        const ackFn = this.channel.ack.bind(this.channel, message.message);
+        const ack = (...args) => {
             if (isConsumed) {
                 return;
             }
-            const args = Array.prototype.slice.call(arguments);
             this.emit('consumed', message);
-            this.channel.ack.apply(this.channel, [message.message].concat(args));
+            ackFn.apply(this, args);
             isConsumed = true;
         };
-        const reject = () => {
+        const nackFn = this.channel.nack.bind(this.channel, message.message);
+        const reject = (...args) => {
             if (isConsumed) {
                 return;
             }
-            const args = Array.prototype.slice.call(arguments);
             this.emit('rejected', message);
-            this.channel.nack.apply(this.channel, [message.message].concat(args));
+            nackFn.apply(this, args);
             isConsumed = true;
         };
         try {
@@ -205,7 +206,7 @@ Consumer.defaultConsumerOptions = {
     noAck: false
 };
 Consumer.defaultAssertQueueOptions = {
-    exclusive: true,
-    autoDelete: true
+    durable: true,
+    autoDelete: false
 };
 exports.default = Consumer;
