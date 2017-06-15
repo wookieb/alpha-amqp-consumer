@@ -6,5 +6,5 @@ machine:
 
 test:
   override:
-    - npm install mocha-junit-reporter
-    - npm run test -- --reporter mocha-junit-reporter
+    - "npm install mocha-junit-reporter"
+    - "npm run test -- --reporter mocha-junit-reporter"
