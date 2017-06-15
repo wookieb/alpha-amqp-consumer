@@ -1,6 +1,6 @@
 machine:
   node:
-    version: 4.3.0
+    version: 6.10.3
   environment:
     MOCHA_FILE: $CIRCLE_TEST_REPORTS/alpha-amqp-consumer.xml
 
