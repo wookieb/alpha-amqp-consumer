@@ -35,8 +35,8 @@ connect('amqp://localhost')
     .then(manager => {
         manager.consume(
             {queue: 'example-queue'},
-            (message, ack) => {
-                setTimeout(ack, 1000);
+            (message) => {
+                // once function is done the messages will be ACK-ed
             }
         );
     }); 
@@ -51,7 +51,7 @@ Usage with promises
 manager.consume(
     {queue: 'example-queue'},
     () => {
-        // message will be automatically ACK-ed after 1s
+        // automatically ACK-ed once promise gets resolved (in that case after 1 second)
         return new Promise((resolve) => setTimeout(resolve, 1000));
     }
 );
@@ -60,54 +60,66 @@ manager.consume(
 ```
 
 ## API
+Full API available in declaration files 
 See special [API declaration file](API.md) and [examples directory](./examples).
 
-### Brief API introduction
-First, you need to create an instance of ConnectionManager responsible for connection and channel initialization.
+## Message ACK-ing and REJECT-ing
+Every consumer has "resultHandler" which a function that decides what to do with the messages based on the result from consumer function.
+Message is rejected automatically it consumer function throws an error or returned promise gets rejected, otherwise message is ACKed.
+You can customize the behavior by providing resultHandler
 
 ```javascript
-const connect = require('alpha-amqp-consumer').connect;
-
-connect('amqp://localhost?heartbeat=10')
-    .then((connectionManager) => {
-        // ready to go!    
-    })
+manager.consume((message) => {
+    // do something
+}, {
+    queue: 'some-queue',
+    resultHandler(context, error) {
+        if (error) {
+            // maybe thrown error is fine?
+            if (isAcceptableError(error)) {
+                context.ack();
+            } else {
+                context.reject();
+            }
+        } else {
+            context.ack();
+        }
+    }
+})
 ```
 
-Now you can start creating instances of Consumer class that takes care about consuming queue or binding to an exchange and then consuming.
+## Retry with delay
+There is no way to say AMQP to retry message consumption after certain period of time. In order to achieve that we need a bit more typology setup.
+
+We need:
+- name of "pre" retry exchange
+- name of "post-retry" exchange
+- name of queue for temporary messages storage
+
+For more information how retry works [another document](docs/how-retry-works.md). 
 
 ```javascript
-const connect = require('alpha-amqp-consumer').connect;
-
-connect('amqp://localhost?heartbeat=10')
-    .then((connectionManager) => {
-        // Consuming a queue
-        // All created consumers are stored in connectionManager.consumers array
-        connectionManager.consume({
-            queue: 'some-queue'
-        }, (message) => {
-            
-            message instanceof Message; // simple wrapper for amqp.Message with few additional getters
-            
-            // consumer will ACK message when promise gets resolved
-            // or rejects the message if promise gets rejected
-            return new Promise((resolve) => {
-                setTimeout(resolve, 1000);
-            });
+manager.setupDelayedRetryTopology({
+    exchange: {
+        pre: 'pre-retry',
+        post: 'post-retry'
+    },
+    queue: 'messages-to-retry'
+})
+    .then(() => {
+        manager.consume(() => {
+            // do something with message
+        }, {
+            queue: 'some-queue',
+            resultHandler(context, error) {
+                if (error) {
+                    context.retry(5000);
+                } else {
+                    context.ack();
+                }
+            }
         })
-            .then((consumer) => {
-                consumer instanceof Consumer;
-            });
-    
-        // Creates new queue and binds to given exchange
-        connectionManager.consume({
-            exchange: 'amqp.topic',
-            pattern: 'some-routing-key'
-        }, (message, ack, reject) => {
-            // manually ACK-ing a message
-            setTimeout(ack, 1000);
-        });
-    })
+    });
 ```
 
 

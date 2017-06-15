@@ -4,3 +4,5 @@ node_modules
 coverage
 npm-debug.log
 junit.xml
+/src/test.ts
+docs/api.d.ts

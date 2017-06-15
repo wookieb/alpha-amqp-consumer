@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import * as amqp from 'amqplib';
+import * as amqp from '@types/amqplib';
 export interface MessageFields {
     readonly consumerTag: string;
     readonly deliveryTag: number;

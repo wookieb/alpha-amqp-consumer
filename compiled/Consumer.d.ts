@@ -1,14 +1,16 @@
 /// <reference types="node" />
 import Message from './Message';
-import * as amqp from 'amqplib';
+import * as amqp from '@types/amqplib';
 import { EventEmitter } from "events";
-export interface ConsumerPolicy {
+import { ResultHandler } from "./ResultHandler";
+import { RetryTopology } from "./ConsumerManager";
+export interface ConsumerOptions {
     /**
      * Options provided to channel.consume
      *
-     * Provided options are merged with defaultConsumerOptions
+     * Merged with defaultConsumeOptions
      */
-    consumerOptions?: amqp.Options.Consume;
+    consumeOptions?: amqp.Options.Consume;
     /**
      * Queue name to consume
      *
@@ -24,7 +26,7 @@ export interface ConsumerPolicy {
     /**
      * Options provided to channel.assertQueue
      *
-     * Provided options are merged with defaultAssertQueueOptions
+     * Merged with defaultAssertQueueOptions
      */
     assertQueueOptions?: amqp.Options.AssertQueue;
     /**
@@ -39,12 +41,15 @@ export interface ConsumerPolicy {
      * Bind args provided for binding process
      */
     bindArgs?: any;
+    /**
+     * Function responsible for acknowledging and rejecting message based on consumer result
+     */
+    resultHandler?: ResultHandler;
 }
 export declare type ACKType = (allUpTo?: boolean) => void;
-export declare type RejectType = (allUpTo?: boolean, requeue?: boolean) => void;
-export declare type ConsumerFunction = (m: Message, ack?: ACKType, reject?: RejectType) => void | Promise<any>;
+export declare type RejectType = (requeue?: boolean, allUpTo?: boolean) => void;
+export declare type ConsumerFunction = (m: Message) => any | Promise<any>;
 export default class Consumer extends EventEmitter {
-    private consumerPolicy;
     private consumerFunction;
     ongoingConsumptions: number;
     channel: amqp.Channel;
@@ -52,16 +57,22 @@ export default class Consumer extends EventEmitter {
     private isConsuming;
     private debug;
     private currentQueueName;
-    static defaultConsumerOptions: amqp.Options.Consume;
+    private options;
+    private retryTopology;
+    static defaultConsumeOptions: amqp.Options.Consume;
     static defaultAssertQueueOptions: amqp.Options.AssertQueue;
-    constructor(consumerPolicy: ConsumerPolicy, consumerFunction: ConsumerFunction);
-    private assertConsumerPolicy(policy);
+    static defaultResultHandler: ResultHandler;
+    constructor(consumerFunction: ConsumerFunction, options?: ConsumerOptions);
+    private mergeOptions(options?);
+    private assertConsumerPolicy();
     /**
      * Returns currently consumed queue name
      *
      * @returns {string}
      */
     readonly queue: string;
+    setRetryTopology(retryTopology: RetryTopology): Promise<void>;
+    private assertRetryTopology();
     /**
      * Sets channel and starts consumption
      *
@@ -71,8 +82,8 @@ export default class Consumer extends EventEmitter {
     setChannel(channel: amqp.Channel): Promise<void>;
     private startConsumption();
     private createQueue();
-    private startQueueConsumption();
     private bindQueueToExchange();
+    private startQueueConsumption();
     /**
      * Stops further queue consumption.
      *

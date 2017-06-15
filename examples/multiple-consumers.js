@@ -3,16 +3,16 @@ const connect = require('../src').connect;
 connect('amqp://localhost?heartbeat=60')
     .then(manager => {
         manager.consume(
-            {queue: 'example-queue'},
-            (message, ack) => {
-                setTimeout(ack, 1000);
-            }
+            (message) => {
+                // do something with message
+            },
+            {queue: 'example-queue'}
         );
 
         manager.consume(
-            {queue: 'example-queue-2'},
             (message) => {
                 return Promise.resolve('test')
-            }
+            },
+            {queue: 'example-queue-2'},
         );
     });

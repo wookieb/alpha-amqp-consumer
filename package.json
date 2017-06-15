@@ -1,6 +1,6 @@
 {
   "name": "alpha-amqp-consumer",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Reliable message consumption via AMQP protocol",
   "main": "compiled/index.js",
   "types": "compiled/index.d.ts",
@@ -20,39 +20,38 @@
     "typescript"
   ],
   "engines": {
-      "node": ">=4.3.0"
+    "node": ">=6.10.0"
   },
   "scripts": {
-    "test": "./node_modules/.bin/jest --config jestConfig.json",
-    "test:coverage": "npm test -- --testResultsProcessor ts-jest/coverageprocessor --coverage --no-cache",
-    "test:ci": "npm test -- --testResultsProcessor jest-junit",
+    "test": "mocha -r ts-node/register --require src/__tests__/bootstrap src/__tests__/*Test.ts",
+    "test:coverage": "nyc -e .ts --reporter=text --reporter=html npm test",
     "prepublish": "npm run compile",
     "compile": "npm run compile:all && rm -rf compiled/__tests__",
-    "compile:all": "rm -rf compiled && ./node_modules/.bin/tsc"
+    "compile:all": "rm -rf compiled && ./node_modules/.bin/tsc",
+    "api-docs": "./node_modules/.bin/dts-generator --name alpha-amqp-consumer --project ./ --out docs/api.d.ts"
   },
   "homepage": "https://github.com/wookieb/alpha-amqp-consumer#readme",
   "dependencies": {
-    "amqplib": "0.5.*",
-    "backoff": "2.*",
-    "debug": "2.*",
     "@types/amqplib": "^0.5.1",
-    "@types/debug": "0.0.29"
+    "@types/debug": "0.0.29",
+    "alpha-amqp-connection-manager": "^0.2.0",
+    "debug": "2.*"
   },
   "devDependencies": {
-    "@types/chai": "^3.5.0",
+    "@types/chai": "^3.5.2",
     "@types/chai-as-promised": "0.0.30",
     "@types/faker": "^4.1.0",
-    "@types/jest": "^19.2.2",
+    "@types/mocha": "^2.2.41",
     "@types/node": "^7.0.12",
-    "@types/sinon": "^2.1.2",
+    "@types/sinon": "^2.2.2",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
+    "dts-generator": "^2.1.0",
     "faker": "^4.1.0",
-    "jest": "^19.0.2",
-    "jest-junit": "^1.5.1",
-    "mocha": "^3.1.2",
-    "sinon": "^2.1.0",
-    "ts-jest": "^19.0.10",
-    "typescript": "^2.2.2"
+    "mocha": "^3.4.2",
+    "nyc": "^11.0.1",
+    "sinon": "^2.3.2",
+    "ts-node": "^3.0.4",
+    "typescript": "^2.3.3"
   }
 }

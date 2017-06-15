@@ -1,12 +1,5 @@
-import ConnectionManager, { ConnectionManagerOptions } from "./ConnectionManager";
 export { default as Message } from "./Message";
-export { default as Consumer, ConsumerPolicy, ConsumerFunction, ACKType, RejectType } from "./Consumer";
-export { default as ConnectionManager, ConnectionManagerOptions, ReconnectOptions } from "./ConnectionManager";
-/**
- * Connects to AMQP server and returns instance of ConnectionManager
- *
- * @param url connection URL to AMQP broker. Should contain "heartbeat" query param.
- * @param [options]
- * @returns {Promise<ConnectionManager>}
- */
-export declare function connect(url: string, options?: ConnectionManagerOptions): Promise<ConnectionManager>;
+export { default as Consumer, ConsumerOptions, ConsumerFunction, ACKType, RejectType } from "./Consumer";
+import { ConnectionManagerOptions } from 'alpha-amqp-connection-manager';
+import ConsumerManager from './ConsumerManager';
+export declare function connect(url: string, options?: ConnectionManagerOptions): Promise<ConsumerManager>;
