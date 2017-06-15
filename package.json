@@ -24,6 +24,7 @@
   },
   "scripts": {
     "test": "mocha -r ts-node/register --require src/__tests__/bootstrap src/__tests__/*Test.ts",
+    "test:c1": "mocha -r ts-node/register --require src/__tests__/bootstrap src/__tests__/*Test.ts",
     "test:coverage": "nyc -e .ts --reporter=text --reporter=html npm test",
     "prepublish": "npm run compile",
     "compile": "npm run compile:all && rm -rf compiled/__tests__",
