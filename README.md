@@ -10,17 +10,10 @@ Features:
 * Ability to stop/resume consumption
 * Supports queue <-> exchange binding
 * Supports queue assertion
+* Allows to retry message consumption after certain amount of time
 * Maintains counter of ongoing consumptions which helps implement [graceful app shutdown](examples/graceful-shutdown.js)
 * Easy debugging with [debug](https://www.npmjs.com/package/debug) module
 
-
-## Table of contents
-* [Install](#install)
-* [Usage](#usage)
-* [API](#api)
-    + [Brief API introduction](#brief-api-introduction)
-* [Debugging](#debugging)
-  
 ## Install
 ```bash
 npm install alpha-amqp-consumer
@@ -34,10 +27,10 @@ const connect = require('alpha-amqp-consumer');
 connect('amqp://localhost')
     .then(manager => {
         manager.consume(
-            {queue: 'example-queue'},
             (message) => {
-                // once function is done the messages will be ACK-ed
-            }
+                // once function execution is done the message will be ACK-ed
+            },
+            {queue: 'example-queue'},
         );
     }); 
 
@@ -60,8 +53,7 @@ manager.consume(
 ```
 
 ## API
-Full API available in declaration files 
-See special [API declaration file](API.md) and [examples directory](./examples).
+See special [API declaration file](docs/api.md) and [examples directory](./examples).
 
 ## Message ACK-ing and REJECT-ing
 Every consumer has "resultHandler" which a function that decides what to do with the messages based on the result from consumer function.
