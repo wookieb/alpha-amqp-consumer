@@ -44,12 +44,8 @@ declare module 'alpha-amqp-consumer/ConsumerManager' {
 	    queue: string;
 	}
 	export default class ConsumerManager {
-	    private connectionManager;
 	    consumers: Consumer[];
-	    private channel;
-	    private retryTopology;
 	    constructor(connectionManager: ConnectionManager);
-	    private onChannel(channel);
 	    /**
 	     * Creates consumer and starts consumption if channel available
 	     */
