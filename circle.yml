@@ -4,6 +4,10 @@ machine:
   environment:
     MOCHA_FILE: $CIRCLE_TEST_REPORTS/alpha-amqp-consumer.xml
 
+dependencies:
+  pre:
+    - "npm install -g npm"
+
 test:
   override:
     - "npm install mocha-junit-reporter"
