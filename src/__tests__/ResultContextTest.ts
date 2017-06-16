@@ -1,5 +1,5 @@
 import {ResultContext} from '../ResultHandler';
-import * as amqp from 'amqplib';
+import * as amqp from '@types/amqplib';
 import * as sinon from 'sinon';
 import {assert} from 'chai';
 import {AssertionError} from "assert";
@@ -8,8 +8,7 @@ import Message from '../Message';
 import * as faker from 'faker';
 import {SinonStub} from "sinon";
 import {EventEmitter} from "events";
-
-const Channel: amqp.Channel = require('amqplib/lib/channel_model').Channel;
+import {FakeChannel} from "./FakeChannel";
 
 describe('ResultContext', () => {
 
@@ -18,11 +17,11 @@ describe('ResultContext', () => {
     let context: ResultContext;
     let message: Message;
 
-    const QUEUE = faker.random.alphaNumeric(20);
+        const QUEUE = faker.random.alphaNumeric(20);
 
-    beforeEach(() => {
-        channel = sinon.createStubInstance(Channel);
-        consumer = sinon.createStubInstance(Consumer);
+        beforeEach(() => {
+            channel = sinon.createStubInstance(FakeChannel);
+            consumer = sinon.createStubInstance(Consumer);
 
         (<any>sinon.stub(consumer, 'queue')).get(() => QUEUE);
 

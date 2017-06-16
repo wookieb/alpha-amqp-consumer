@@ -7,7 +7,7 @@ import Message from "../Message";
 import {SinonStub} from "sinon";
 import {ResultContext, ResultHandler} from "../ResultHandler";
 import {RetryTopology} from "../ConsumerManager";
-const Channel: amqp.Channel = require('amqplib/lib/channel_model').Channel;
+import {FakeChannel} from "./FakeChannel";
 
 describe('Consumer', () => {
 
@@ -30,7 +30,7 @@ describe('Consumer', () => {
 
     beforeEach(() => {
         consumerFunction = sinon.stub();
-        channel = sinon.createStubInstance(Channel);
+        channel = sinon.createStubInstance(FakeChannel);
 
         (<SinonStub>channel.consume).resolves(<amqp.Replies.Consume>{
             consumerTag: CONSUMER_TAG
@@ -358,7 +358,7 @@ describe('Consumer', () => {
         beforeEach(() => {
             context = new ResultContext();
             context.message = sinon.createStubInstance(Message);
-            context.channel = sinon.createStubInstance(Channel);
+            context.channel = sinon.createStubInstance(FakeChannel);
             context.consumer = sinon.createStubInstance(Consumer);
             context.ack = sinon.spy();
             context.reject = sinon.spy();

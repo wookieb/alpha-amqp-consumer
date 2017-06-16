@@ -1,5 +1,5 @@
 import Message from "../Message";
-import * as amqp from "amqplib";
+import * as amqp from "@types/amqplib";
 import * as sinon from "sinon";
 import * as faker from 'faker';
 import {assert} from "chai";
