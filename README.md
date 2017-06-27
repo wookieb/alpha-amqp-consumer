@@ -120,3 +120,9 @@ Run your app with DEBUG env variable. See [debug package docs](https://www.npmjs
 ```bash
 DEBUG=alpha-amqp-consumer:* node app.js
 ``` 
+
+# Changelog
+
+## 0.4.2
+* "channel" and "retryTopology" for ConsumerManager are now public
+* "ConnectionManagerOptions" interface exported

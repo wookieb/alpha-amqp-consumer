@@ -14,10 +14,9 @@ export interface RetryTopology {
 }
 
 export default class ConsumerManager {
-
     consumers: Consumer[] = [];
-    private channel: amqp.Channel;
-    private retryTopology: RetryTopology;
+    channel: amqp.Channel;
+    retryTopology: RetryTopology;
 
     constructor(private connectionManager: ConnectionManager) {
         this.connectionManager.on('channel', this.onChannel.bind(this));
