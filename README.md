@@ -123,6 +123,9 @@ DEBUG=alpha-amqp-consumer:* node app.js
 
 # Changelog
 
+## 0.4.3
+* Added extra exported types
+
 ## 0.4.2
 * "channel" and "retryTopology" for ConsumerManager are now public
 * "ConnectionManagerOptions" interface exported
