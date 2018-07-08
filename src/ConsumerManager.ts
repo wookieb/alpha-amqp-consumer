@@ -18,7 +18,7 @@ export default class ConsumerManager {
     channel: amqp.Channel;
     retryTopology: RetryTopology;
 
-    constructor(private connectionManager: ConnectionManager) {
+    constructor(private connectionManager: ConnectionManager, private defaultPrefetch = 5) {
         this.connectionManager.on('channel', this.onChannel.bind(this));
     }
 
@@ -27,7 +27,7 @@ export default class ConsumerManager {
         for (const consumer of this.consumers) {
             // noinspection JSIgnoredPromiseFromCall
 
-            await this.channel.prefetch(1);
+            await this.channel.prefetch(this.defaultPrefetch);
             await consumer.setChannel(this.channel);
         }
     }

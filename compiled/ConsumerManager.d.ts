@@ -10,10 +10,11 @@ export interface RetryTopology {
 }
 export default class ConsumerManager {
     private connectionManager;
+    private defaultPrefetch;
     consumers: Consumer[];
     channel: amqp.Channel;
     retryTopology: RetryTopology;
-    constructor(connectionManager: ConnectionManager);
+    constructor(connectionManager: ConnectionManager, defaultPrefetch?: number);
     private onChannel(channel);
     /**
      * Creates consumer and starts consumption if channel available
