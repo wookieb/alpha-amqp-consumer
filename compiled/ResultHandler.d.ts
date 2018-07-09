@@ -1,5 +1,5 @@
 import Message from "./Message";
-import * as amqp from '@types/amqplib';
+import * as amqp from 'amqplib';
 import { ACKType, default as Consumer, RejectType } from "./Consumer";
 import { RetryTopology } from "./ConsumerManager";
 export declare class ResultContext {

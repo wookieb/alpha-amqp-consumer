@@ -1,4 +1,4 @@
-import {Channel} from '@types/amqplib';
+import {Channel} from 'amqplib';
 
 export class FakeChannel {
     publish() {}

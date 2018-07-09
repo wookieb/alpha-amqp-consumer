@@ -1,6 +1,6 @@
 import { ConnectionManager, ConnectionManagerOptions } from 'alpha-amqp-connection-manager';
 import Consumer, { ConsumerFunction, ConsumerOptions } from "./Consumer";
-import * as amqp from '@types/amqplib';
+import * as amqp from 'amqplib';
 export interface RetryTopology {
     exchange: {
         pre: string;
@@ -15,7 +15,7 @@ export default class ConsumerManager {
     channel: amqp.Channel;
     retryTopology: RetryTopology;
     constructor(connectionManager: ConnectionManager, defaultPrefetch?: number);
-    private onChannel(channel);
+    private onChannel;
     /**
      * Creates consumer and starts consumption if channel available
      */

@@ -1,12 +1,4 @@
-import * as amqp from '@types/amqplib';
-
-export interface MessageFields {
-    readonly consumerTag: string,
-    readonly deliveryTag: number,
-    readonly redelivered: boolean,
-    readonly exchange: string,
-    readonly routingKey: string
-}
+import * as amqp from 'amqplib';
 
 export default class Message {
 
@@ -18,11 +10,11 @@ export default class Message {
         return this.message.content;
     }
 
-    get properties() {
+    get properties(): amqp.MessageProperties {
         return this.message.properties;
     }
 
-    get headers() {
+    get headers(): amqp.MessagePropertyHeaders {
         return this.message.properties.headers;
     }
 
@@ -34,7 +26,7 @@ export default class Message {
         return this.message.fields.routingKey;
     }
 
-    get fields(): MessageFields {
+    get fields(): amqp.MessageFields {
         return this.message.fields;
     }
 }

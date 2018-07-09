@@ -1,5 +1,5 @@
 import {ResultContext} from '../ResultHandler';
-import * as amqp from '@types/amqplib';
+import * as amqp from 'amqplib';
 import * as sinon from 'sinon';
 import {assert} from 'chai';
 import {AssertionError} from "assert";
@@ -26,10 +26,14 @@ describe('ResultContext', () => {
         (<any>sinon.stub(consumer, 'queue')).get(() => QUEUE);
 
         message = new Message({
-            properties: {
-                some: 'extra-properties'
+            properties: <any>{},
+            fields: {
+                deliveryTag: faker.random.number(1000),
+                redelivered: faker.random.boolean(),
+                exchange: faker.random.alphaNumeric(20),
+                routingKey: faker.random.alphaNumeric(20),
+                messageCount: faker.random.alphaNumeric(10)
             },
-            fields: {},
             content: new Buffer('some-content')
         }, QUEUE);
 

@@ -77,8 +77,13 @@ describe('Consumer', () => {
     function createAmqpMessage() {
         return <amqp.Message>{
             content: new Buffer('some content'),
-            fields: {some: 'fields'},
-            properties: {some: 'properties'}
+            fields: {
+                deliveryTag: 100,
+                redelivered: false,
+                messageCount: '100',
+                exchange: null,
+                routingKey: null
+            }
         };
     }
 

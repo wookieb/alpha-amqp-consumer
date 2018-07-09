@@ -1,6 +1,6 @@
 import {ConnectionManager, ConnectionManagerOptions} from 'alpha-amqp-connection-manager';
 import Consumer, {ConsumerFunction, ConsumerOptions} from "./Consumer";
-import * as amqp from '@types/amqplib';
+import * as amqp from 'amqplib';
 import debugFn from './debug';
 
 const debug = debugFn();
@@ -18,16 +18,15 @@ export default class ConsumerManager {
     channel: amqp.Channel;
     retryTopology: RetryTopology;
 
-    constructor(private connectionManager: ConnectionManager, private defaultPrefetch = 5) {
+    constructor(private connectionManager: ConnectionManager, private defaultPrefetch = 10) {
         this.connectionManager.on('channel', this.onChannel.bind(this));
     }
 
     private async onChannel(channel: amqp.Channel) {
         this.channel = channel;
+        await this.channel.prefetch(this.defaultPrefetch);
         for (const consumer of this.consumers) {
             // noinspection JSIgnoredPromiseFromCall
-
-            await this.channel.prefetch(this.defaultPrefetch);
             await consumer.setChannel(this.channel);
         }
     }

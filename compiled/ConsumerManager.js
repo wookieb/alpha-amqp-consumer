@@ -13,7 +13,7 @@ const Consumer_1 = require("./Consumer");
 const debug_1 = require("./debug");
 const debug = debug_1.default();
 class ConsumerManager {
-    constructor(connectionManager, defaultPrefetch = 5) {
+    constructor(connectionManager, defaultPrefetch = 10) {
         this.connectionManager = connectionManager;
         this.defaultPrefetch = defaultPrefetch;
         this.consumers = [];
@@ -22,9 +22,9 @@ class ConsumerManager {
     onChannel(channel) {
         return __awaiter(this, void 0, void 0, function* () {
             this.channel = channel;
+            yield this.channel.prefetch(this.defaultPrefetch);
             for (const consumer of this.consumers) {
                 // noinspection JSIgnoredPromiseFromCall
-                yield this.channel.prefetch(this.defaultPrefetch);
                 yield consumer.setChannel(this.channel);
             }
         });

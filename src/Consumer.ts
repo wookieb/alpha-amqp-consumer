@@ -1,6 +1,6 @@
 import Message from './Message';
 import debug from './debug';
-import * as amqp from '@types/amqplib';
+import * as amqp from 'amqplib';
 import * as debugModule from 'debug';
 import {EventEmitter} from "events";
 import {ResultContext, ResultHandler} from "./ResultHandler";

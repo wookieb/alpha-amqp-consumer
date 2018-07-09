@@ -1,5 +1,5 @@
 import Message from "../Message";
-import * as amqp from "@types/amqplib";
+import * as amqp from "amqplib";
 import * as sinon from "sinon";
 import * as faker from 'faker';
 import {assert} from "chai";
@@ -8,18 +8,13 @@ describe('Message', () => {
     const QUEUE_NAME = 'queue-name';
     const amqpMessage: amqp.Message = {
         content: new Buffer('Some buffer content'),
-        properties: {
-            some: faker.random.alphaNumeric(30),
-            headers: {
-                header: faker.random.alphaNumeric(30)
-            }
-        },
+        properties: <any>{},
         fields: {
-            consumerTag: faker.random.alphaNumeric(20),
             deliveryTag: faker.random.number(1000),
             redelivered: faker.random.boolean(),
             exchange: faker.random.alphaNumeric(20),
-            routingKey: faker.random.alphaNumeric(20)
+            routingKey: faker.random.alphaNumeric(20),
+            messageCount: faker.random.alphaNumeric(10)
         }
     };
     let message: Message;

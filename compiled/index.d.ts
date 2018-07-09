@@ -1,4 +1,4 @@
-export { default as Message, MessageFields } from "./Message";
+export { default as Message } from "./Message";
 export { default as Consumer, ConsumerOptions, ConsumerFunction, ACKType, RejectType } from "./Consumer";
 export { ResultContext, ResultHandler } from './ResultHandler';
 export { default as ConsumerManager, RetryTopology } from './ConsumerManager';

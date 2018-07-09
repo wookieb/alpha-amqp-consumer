@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import Message from './Message';
-import * as amqp from '@types/amqplib';
+import * as amqp from 'amqplib';
 import { EventEmitter } from "events";
 import { ResultHandler } from "./ResultHandler";
 import { RetryTopology } from "./ConsumerManager";
@@ -63,8 +63,8 @@ export default class Consumer extends EventEmitter {
     static defaultAssertQueueOptions: amqp.Options.AssertQueue;
     static defaultResultHandler: ResultHandler;
     constructor(consumerFunction: ConsumerFunction, options?: ConsumerOptions);
-    private mergeOptions(options?);
-    private assertConsumerPolicy();
+    private mergeOptions;
+    private assertConsumerPolicy;
     /**
      * Returns currently consumed queue name
      *
@@ -72,7 +72,7 @@ export default class Consumer extends EventEmitter {
      */
     readonly queue: string;
     setRetryTopology(retryTopology: RetryTopology): Promise<void>;
-    private assertRetryTopology();
+    private assertRetryTopology;
     /**
      * Sets channel and starts consumption
      *
@@ -80,10 +80,10 @@ export default class Consumer extends EventEmitter {
      * @returns {Promise}
      */
     setChannel(channel: amqp.Channel): Promise<void>;
-    private startConsumption();
-    private createQueue();
-    private bindQueueToExchange();
-    private startQueueConsumption();
+    private startConsumption;
+    private createQueue;
+    private bindQueueToExchange;
+    private startQueueConsumption;
     /**
      * Stops further queue consumption.
      *
@@ -102,7 +102,7 @@ export default class Consumer extends EventEmitter {
      * @returns {Promise<void>}
      */
     resume(): Promise<void>;
-    private consume(message);
-    private incrementCounter();
-    private decreaseCounter();
+    private consume;
+    private incrementCounter;
+    private decreaseCounter;
 }
