@@ -14,7 +14,7 @@ describe('Message', () => {
             redelivered: faker.random.boolean(),
             exchange: faker.random.alphaNumeric(20),
             routingKey: faker.random.alphaNumeric(20),
-            messageCount: faker.random.alphaNumeric(10)
+            messageCount: faker.random.number(10)
         }
     };
     let message: Message;

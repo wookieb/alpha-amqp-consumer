@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import Message from './Message';
 import * as amqp from 'amqplib';
 import { EventEmitter } from "events";

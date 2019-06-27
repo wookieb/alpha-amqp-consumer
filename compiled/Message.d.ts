@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import * as amqp from 'amqplib';
 export default class Message {
     readonly message: amqp.Message;

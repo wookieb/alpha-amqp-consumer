@@ -1,6 +1,6 @@
 {
   "name": "alpha-amqp-consumer",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Reliable message consumption via AMQP protocol",
   "main": "compiled/index.js",
   "types": "compiled/index.d.ts",
@@ -19,6 +19,10 @@
     "consumption",
     "typescript"
   ],
+  "files": [
+    "compiled",
+    "docs"
+  ],
   "engines": {
     "node": ">=6.10.0"
   },
@@ -33,7 +37,7 @@
   },
   "homepage": "https://github.com/wookieb/alpha-amqp-consumer#readme",
   "dependencies": {
-    "@types/amqplib": "^0.5.1",
+    "@types/amqplib": "^0.5.13",
     "@types/debug": "0.0.29",
     "alpha-amqp-connection-manager": "^0.2.0",
     "debug": "2.*"
