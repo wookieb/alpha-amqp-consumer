@@ -1,32 +1,34 @@
 import * as amqp from 'amqplib';
 
-export default class Message {
+export class Message {
+	constructor(public readonly message: amqp.Message, public readonly queue: string) {
+	}
 
+	get content() {
+		return this.message.content;
+	}
 
-    constructor(public readonly message: amqp.Message, public readonly queue: string) {
-    }
+	get properties(): amqp.MessageProperties {
+		return this.message.properties;
+	}
 
-    get content() {
-        return this.message.content;
-    }
+	get headers(): amqp.MessagePropertyHeaders {
+		return this.message.properties.headers;
+	}
 
-    get properties(): amqp.MessageProperties {
-        return this.message.properties;
-    }
+	get exchange() {
+		return this.message.fields.exchange;
+	}
 
-    get headers(): amqp.MessagePropertyHeaders {
-        return this.message.properties.headers;
-    }
+	get routingKey() {
+		return this.message.fields.routingKey;
+	}
 
-    get exchange() {
-        return this.message.fields.exchange;
-    }
+	get fields(): amqp.MessageFields {
+		return this.message.fields;
+	}
 
-    get routingKey() {
-        return this.message.fields.routingKey;
-    }
-
-    get fields(): amqp.MessageFields {
-        return this.message.fields;
-    }
+	getContent() {
+		return this.message.content;
+	}
 }

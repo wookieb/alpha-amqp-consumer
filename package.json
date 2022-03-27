@@ -1,6 +1,6 @@
 {
   "name": "alpha-amqp-consumer",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "description": "Reliable message consumption via AMQP protocol",
   "main": "compiled/index.js",
   "types": "compiled/index.d.ts",
@@ -23,40 +23,26 @@
     "compiled",
     "docs"
   ],
-  "engines": {
-    "node": ">=6.10.0"
-  },
   "scripts": {
-    "test": "mocha -r ts-node/register --require src/__tests__/bootstrap src/__tests__/*Test.ts",
-    "test:c1": "mocha -r ts-node/register --require src/__tests__/bootstrap src/__tests__/*Test.ts",
-    "test:coverage": "nyc -e .ts --reporter=text --reporter=html npm test",
-    "prepublish": "npm run compile",
-    "compile": "npm run compile:all && rm -rf compiled/__tests__",
-    "compile:all": "rm -rf compiled && ./node_modules/.bin/tsc",
-    "api-docs": "./node_modules/.bin/dts-generator --name alpha-amqp-consumer --project ./ --out docs/api.d.ts"
+    "prepack": "npm run compile",
+    "compile": "pallad-scripts compile",
+    "test": "pallad-scripts test",
+    "lint": "pallad-scripts lint"
   },
   "homepage": "https://github.com/wookieb/alpha-amqp-consumer#readme",
   "dependencies": {
-    "@types/amqplib": "^0.5.13",
-    "@types/debug": "0.0.29",
-    "alpha-amqp-connection-manager": "^0.2.0",
-    "debug": "2.*"
+    "@types/amqplib": "^0.8",
+    "@types/debug": "^4",
+    "alpha-amqp-connection-manager": "^0.3.1",
+    "debug": "^4",
+    "predicates": "^2.0.3"
   },
   "devDependencies": {
-    "@types/chai": "^3.5.2",
-    "@types/chai-as-promised": "0.0.30",
-    "@types/faker": "^4.1.0",
-    "@types/mocha": "^2.2.41",
-    "@types/node": "^7.0.12",
-    "@types/sinon": "^2.2.2",
-    "chai": "^3.5.0",
-    "chai-as-promised": "^6.0.0",
-    "dts-generator": "^2.1.0",
-    "faker": "^4.1.0",
-    "mocha": "^3.4.2",
-    "nyc": "^11.0.1",
-    "sinon": "^2.3.2",
-    "ts-node": "^3.0.4",
-    "typescript": "^2.3.3"
+    "@pallad/scripts": "^2",
+    "@types/debug": "^4",
+    "@types/faker": "^5",
+    "@types/sinon": "^9",
+    "faker": "^5",
+    "sinon": "^9"
   }
 }

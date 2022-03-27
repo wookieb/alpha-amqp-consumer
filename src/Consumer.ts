@@ -1,322 +1,309 @@
-import Message from './Message';
-import debug from './debug';
 import * as amqp from 'amqplib';
 import * as debugModule from 'debug';
 import {EventEmitter} from "events";
 import {ResultContext, ResultHandler} from "./ResultHandler";
 import {RetryTopology} from "./ConsumerManager";
-
-export interface ConsumerOptions {
-    /**
-     * Options provided to channel.consume
-     *
-     * Merged with defaultConsumeOptions
-     */
-    consumeOptions?: amqp.Options.Consume
-
-    /**
-     * Queue name to consume
-     *
-     * Required if exchange provided but assertQueue is false
-     */
-    queue?: string;
-
-    /**
-     * Whether queue should be asserted at the beginning
-     *
-     * Defaults to true
-     */
-    assertQueue?: boolean;
-
-    /**
-     * Options provided to channel.assertQueue
-     *
-     * Merged with defaultAssertQueueOptions
-     */
-    assertQueueOptions?: amqp.Options.AssertQueue;
-
-    /**
-     * Exchange name to bind to
-     */
-    exchange?: string;
-
-    /**
-     * Exchange topic|pattern
-     */
-    pattern?: string;
-
-    /**
-     * Bind args provided for binding process
-     */
-    bindArgs?: any,
-
-    /**
-     * Function responsible for acknowledging and rejecting message based on consumer result
-     */
-    resultHandler?: ResultHandler;
-}
+import {Message} from "./Message";
+import {debugFn} from "./debugFn";
+import * as is from 'predicates'
 
 export type ACKType = (allUpTo?: boolean) => void;
 export type RejectType = (requeue?: boolean, allUpTo?: boolean) => void;
-export type ConsumerFunction = (m: Message) => any | Promise<any>;
 
-export default class Consumer extends EventEmitter {
+export class Consumer extends EventEmitter {
+	public ongoingConsumptions = 0;
+	public channel?: amqp.Channel;
+	public consumerTag?: string;
 
-    public ongoingConsumptions = 0;
-    public channel: amqp.Channel;
-    public consumerTag: string;
+	private isConsuming: boolean = false;
+	private debug: debugModule.IDebugger;
+	private currentQueueName?: string;
+	private options: Consumer.Options;
+	private retryTopology?: RetryTopology;
 
-    private isConsuming: boolean = false;
-    private debug: debugModule.IDebugger;
-    private currentQueueName: string;
+	static defaultConsumeOptions: amqp.Options.Consume = {
+		noAck: false
+	};
 
-    private options: ConsumerOptions;
+	static defaultAssertQueueOptions: amqp.Options.AssertQueue = {
+		durable: true,
+		autoDelete: false
+	};
 
-    private retryTopology: RetryTopology;
+	static defaultResultHandler: ResultHandler = function (context: ResultContext, error?: any, result?: any) {
+		if (error) {
+			context.reject();
+		} else {
+			context.ack();
+		}
+	};
 
-    static defaultConsumeOptions: amqp.Options.Consume = {
-        noAck: false
-    };
+	constructor(private consumerFunction: Consumer.Function, options?: Consumer.Options) {
+		super();
 
-    static defaultAssertQueueOptions: amqp.Options.AssertQueue = {
-        durable: true,
-        autoDelete: false
-    };
+		this.options = this.mergeOptions(options);
+		this.assertConsumerPolicy();
 
-    static defaultResultHandler: ResultHandler = function (context: ResultContext, error?: any, result?: any) {
-        if (error) {
-            context.reject();
-        } else {
-            context.ack();
-        }
-    };
+		this.debug = debugFn('consumer:__no-consumer-tag__');
 
-    constructor(private consumerFunction: ConsumerFunction, options?: ConsumerOptions) {
-        super();
+		this.on('consumed', () => this.decreaseCounter());
+		this.on('rejected', () => this.decreaseCounter());
+	}
 
-        this.options = this.mergeOptions(options);
-        this.assertConsumerPolicy();
+	private mergeOptions(options: Consumer.Options = {}): Consumer.Options {
+		const defaultValues: Partial<Consumer.Options> = {
+			assertQueue: true,
+			resultHandler: Consumer.defaultResultHandler
+		};
 
-        this.debug = debug('consumer:__no-consumer-tag__');
+		const mergedOptions: Partial<Consumer.Options> = {
+			consumeOptions: {...Consumer.defaultConsumeOptions, ...(options.consumeOptions || {})},
+			assertQueueOptions: {...Consumer.defaultAssertQueueOptions, ...(options.assertQueueOptions || {})},
+		};
 
-        this.on('consumed', () => this.decreaseCounter());
-        this.on('rejected', () => this.decreaseCounter());
-    }
+		return {...defaultValues, ...options, ...mergedOptions};
+	}
 
-    private mergeOptions(options: ConsumerOptions = {}): ConsumerOptions {
-        const defaultValues: Partial<ConsumerOptions> = {
-            assertQueue: true,
-            resultHandler: Consumer.defaultResultHandler
-        };
+	private assertConsumerPolicy() {
+		// assertQueue set to false, exchange provided but no queue name provided
+		if (!this.options.assertQueue && this.options.exchange && !this.options.queue) {
+			const message = `You did provide exchange name "${this.options.exchange}" but not queue name. ` +
+				`In that case assertQueue options MUST be set to true`;
+			throw new Error(message);
+		}
+	}
 
-        const mergedOptions: Partial<ConsumerOptions> = {
-            consumeOptions: Object.assign({}, Consumer.defaultConsumeOptions, options.consumeOptions),
-            assertQueueOptions: Object.assign({}, Consumer.defaultAssertQueueOptions, options.assertQueueOptions),
-        };
+	/**
+	 * Returns currently consumed queue name
+	 */
+	get queue() {
+		return this.currentQueueName;
+	}
 
-        return Object.assign({}, defaultValues, options, mergedOptions);
-    }
+	async setRetryTopology(retryTopology: RetryTopology) {
+		this.retryTopology = retryTopology;
 
-    private assertConsumerPolicy() {
-        // assertQueue set to false, exchange provided but no queue name provided
-        if (!this.options.assertQueue && this.options.exchange && !this.options.queue) {
-            const message = `You did provide exchange name "${this.options.exchange}" but not queue name. ` +
-                `In that case assertQueue options MUST be set to true`;
-            throw new Error(message);
-        }
-    }
+		if (this.channel && this.queue) {
+			await this.assertRetryTopology();
+		}
+	}
 
-    /**
-     * Returns currently consumed queue name
-     *
-     * @returns {string}
-     */
-    get queue(): string {
-        return this.currentQueueName;
-    }
+	private async assertRetryTopology() {
+		await this.channel!.bindQueue(this.queue!, this.retryTopology!.exchange.post, this.queue!);
+	}
 
-    async setRetryTopology(retryTopology: RetryTopology) {
-        this.retryTopology = retryTopology;
+	/**
+	 * Sets channel and starts consumption
+	 */
+	async setChannel(channel: amqp.Channel): Promise<void> {
+		this.channel = channel;
+		if (this.channel) {
+			await this.startConsumption();
+		}
+	}
 
-        if (this.channel && this.queue) {
-            await this.assertRetryTopology();
-        }
-    }
+	private async startConsumption(): Promise<void> {
+		if (this.options.assertQueue) {
+			this.currentQueueName = await this.createQueue();
+		} else {
+			this.currentQueueName = this.options.queue;
+		}
 
-    private async assertRetryTopology() {
-        await this.channel.bindQueue(this.queue, this.retryTopology.exchange.post, this.queue);
-    }
+		if (this.options.exchange) {
+			await this.channel!.bindQueue(
+				this.currentQueueName!,
+				this.options.exchange,
+				this.options.pattern!,
+				this.options.bindArgs
+			);
+		}
 
-    /**
-     * Sets channel and starts consumption
-     *
-     * @param channel
-     * @returns {Promise}
-     */
-    async setChannel(channel: amqp.Channel): Promise<void> {
-        this.channel = channel;
-        if (this.channel) {
-            await this.startConsumption();
-        }
-    }
+		if (this.retryTopology) {
+			await this.assertRetryTopology();
+		}
+		await this.startQueueConsumption();
+	}
 
-    private async startConsumption(): Promise<void> {
-        if (this.options.assertQueue) {
-            this.currentQueueName = await this.createQueue();
-        } else {
-            this.currentQueueName = this.options.queue;
-        }
+	private async createQueue(): Promise<string> {
+		const result = await this.channel!.assertQueue(this.options.queue || '', this.options.assertQueueOptions);
+		return result.queue;
+	}
 
-        if (this.options.exchange) {
-            await this.bindQueueToExchange();
-        }
+	private async startQueueConsumption(): Promise<void> {
+		try {
+			const consumeOptions = {...this.options.consumeOptions, consumerTag: this.consumerTag};
+			const result = await this.channel!.consume(this.currentQueueName!, msg => {
+				// eslint-disable-next-line no-null/no-null
+				if (msg === null) {
+					// ignore - consumer cancelled
+					return;
+				}
 
-        if (this.retryTopology) {
-            await this.assertRetryTopology();
-        }
-        await this.startQueueConsumption();
-    }
+				this.consume(new Message(msg, this.currentQueueName!));
+			}, consumeOptions);
 
-    private async createQueue(): Promise<string> {
-        const result = await this.channel.assertQueue(this.options.queue || '', this.options.assertQueueOptions);
-        return result.queue;
-    }
-
-    private async bindQueueToExchange(): Promise<void> {
-        await this.channel.bindQueue(
-            this.currentQueueName,
-            this.options.exchange,
-            this.options.pattern,
-            this.options.bindArgs
-        );
-    }
-
-    private async startQueueConsumption(): Promise<void> {
-        try {
-            const consumeOptions = Object.assign({}, this.options.consumeOptions, {consumerTag: this.consumerTag});
-            const result = await this.channel.consume(this.currentQueueName, (msg) => {
-                if (msg === null) {
-                    // ignore - consumer cancelled
-                    return;
-                }
-
-                this.consume(new Message(msg, this.currentQueueName));
-            }, consumeOptions);
-
-            this.consumerTag = result.consumerTag;
-            this.isConsuming = true;
-            this.emit('started');
-            this.debug = debug('consumer:' + this.consumerTag);
-            this.debug(`Queue "${this.currentQueueName}" consumption has started`);
-        } catch (e) {
-            this.debug(`Queue consumption has failed: ${e.message}`);
-            throw e;
-        }
-    }
+			this.consumerTag = result.consumerTag;
+			this.isConsuming = true;
+			this.emit('started');
+			this.debug = debugFn('consumer:' + this.consumerTag);
+			this.debug(`Queue "${this.currentQueueName}" consumption has started`);
+		} catch (e: any) {
+			this.debug(`Queue consumption has failed: ${e.message}`);
+			throw e;
+		}
+	}
 
 
-    /**
-     * Stops further queue consumption.
-     *
-     * @returns {Promise<void>}
-     */
-    async stop() {
-        if (!this.isConsuming) {
-            throw new Error('Consumption is already stopped');
-        }
+	/**
+	 * Stops further queue consumption.
+	 */
+	async stop() {
+		if (!this.isConsuming) {
+			throw new Error('Consumption is already stopped');
+		}
 
-        try {
-            await this.channel.cancel(this.consumerTag);
-            this.isConsuming = false;
-            this.emit('stopped');
-            this.debug('Consumer paused');
-        } catch (e) {
-            this.debug(`Consumer failed to pause ${e.message}`);
-            throw e;
-        }
-    }
+		try {
+			await this.channel!.cancel(this.consumerTag!);
+			this.isConsuming = false;
+			this.emit('stopped');
+			this.debug('Consumer paused');
+		} catch (e: any) {
+			this.debug(`Consumer failed to pause ${e.message}`);
+			throw e;
+		}
+	}
 
-    /**
-     * Indicates whether consumption is stopped
-     *
-     * @returns {boolean}
-     */
-    get isStopped() {
-        return !this.isConsuming;
-    }
+	/**
+	 * Indicates whether consumption is stopped
+	 */
+	get isStopped() {
+		return !this.isConsuming;
+	}
 
-    /**
-     * Resumes consumption
-     *
-     * @returns {Promise<void>}
-     */
-    async resume() {
-        if (this.isConsuming) {
-            throw new Error('Consumption is already resumed')
-        }
+	/**
+	 * Resumes consumption
+	 */
+	async resume() {
+		if (this.isConsuming) {
+			throw new Error('Consumption is already resumed')
+		}
 
-        if (!this.channel) {
-            throw new Error('Cannot resume consumption without channel open');
-        }
+		if (!this.channel) {
+			throw new Error('Cannot resume consumption without channel open');
+		}
 
-        try {
-            await this.startConsumption();
-            this.debug('Consumption resumed');
-        } catch (e) {
-            this.debug(`Consumption resume has failed: ${e.message}`);
-            throw e;
-        }
-    }
+		try {
+			await this.startConsumption();
+			this.debug('Consumption resumed');
+		} catch (e: any) {
+			this.debug(`Consumption resume has failed: ${e.message}`);
+			throw e;
+		}
+	}
 
-    private consume(message: Message) {
-        this.incrementCounter();
+	private consume(message: Message) {
+		this.incrementCounter();
 
-        const ackFn = this.channel.ack.bind(this.channel, message.message);
-        const ack: ACKType = (allUpTo: boolean = false) => {
-            ackFn(allUpTo);
-            this.emit('consumed', message, allUpTo);
-        };
+		const ackFn = this.channel!.ack.bind(this.channel, message.message);
+		const ack: ACKType = (allUpTo: boolean = false) => {
+			ackFn(allUpTo);
+			this.emit('consumed', message, allUpTo);
+		};
 
-        const nackFn = this.channel.nack.bind(this.channel, message.message);
-        const reject: RejectType = (requeue: boolean = true, allUpTo: boolean = false) => {
-            nackFn(allUpTo, requeue);
-            this.emit('rejected', message, requeue, allUpTo);
-        };
+		const nackFn = this.channel!.nack.bind(this.channel, message.message);
+		const reject: RejectType = (requeue: boolean = true, allUpTo: boolean = false) => {
+			nackFn(allUpTo, requeue);
+			this.emit('rejected', message, requeue, allUpTo);
+		};
 
-        const context = new ResultContext();
-        context.channel = this.channel;
-        context.consumer = this;
-        context.retryTopology = this.retryTopology;
-        context.message = message;
-        context.ack = ack;
-        context.reject = reject;
+		const context = new ResultContext();
+		context.channel = this.channel!;
+		context.consumer = this;
+		context.retryTopology = this.retryTopology;
+		context.message = message;
+		context.ack = ack;
+		context.reject = reject;
 
-        const resultHandler = this.options.resultHandler;
+		const resultHandler = this.options.resultHandler;
 
-        try {
-            const result = this.consumerFunction(message);
+		try {
+			const result = this.consumerFunction(message);
 
-            if (result instanceof Object && 'then' in result) {
-                result.then(
-                    (resolvedValue: any) => resultHandler(context, undefined, resolvedValue),
-                    (error: any) => resultHandler(context, error)
-                );
-            } else {
-                resultHandler(context, undefined, result);
-            }
-        } catch (e) {
-            resultHandler(context, e);
-        }
-    }
+			if (is.promiseLike(result)) {
+				result.then(
+					(resolvedValue: any) => resultHandler!(context, undefined, resolvedValue),
+					(error: any) => resultHandler!(context, error)
+				);
+			} else {
+				resultHandler!(context, undefined, result);
+			}
+		} catch (e) {
+			resultHandler!(context, e);
+		}
+	}
 
-    private incrementCounter() {
-        this.ongoingConsumptions++;
-    }
+	private incrementCounter() {
+		this.ongoingConsumptions++;
+	}
 
-    private decreaseCounter() {
-        this.ongoingConsumptions--;
-        if (this.ongoingConsumptions === 0) {
-            this.emit('all-consumed');
-        }
-    }
+	private decreaseCounter() {
+		this.ongoingConsumptions--;
+		if (this.ongoingConsumptions === 0) {
+			this.emit('all-consumed');
+		}
+	}
+}
+
+export namespace Consumer {
+	export interface Options {
+		/**
+		 * Options provided to channel.consume
+		 *
+		 * Merged with defaultConsumeOptions
+		 */
+		consumeOptions?: amqp.Options.Consume
+
+		/**
+		 * Queue name to consume
+		 *
+		 * Required if exchange provided but assertQueue is false
+		 */
+		queue?: string;
+
+		/**
+		 * Whether queue should be asserted at the beginning
+		 *
+		 * Defaults to true
+		 */
+		assertQueue?: boolean;
+
+		/**
+		 * Options provided to channel.assertQueue
+		 *
+		 * Merged with defaultAssertQueueOptions
+		 */
+		assertQueueOptions?: amqp.Options.AssertQueue;
+
+		/**
+		 * Exchange name to bind to
+		 */
+		exchange?: string;
+
+		/**
+		 * Exchange topic|pattern
+		 */
+		pattern?: string;
+
+		/**
+		 * Bind args provided for binding process
+		 */
+		bindArgs?: any,
+
+		/**
+		 * Function responsible for acknowledging and rejecting message based on consumer result
+		 */
+		resultHandler?: ResultHandler;
+	}
+
+	export type Function = (m: Message) => unknown | Promise<unknown>;
 }

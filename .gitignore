@@ -1,8 +1,10 @@
 node_modules
+coverage
+compiled
+*.log
+junit.xml
 .idea
 **/.DS_Store
-coverage
-npm-debug.log
-junit.xml
-/src/test.ts
-docs/api.d.ts
+.eslintcache
+tsnode-cache
+.task
